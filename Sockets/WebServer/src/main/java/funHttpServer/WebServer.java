@@ -16,15 +16,30 @@ write a response back
 
 package funHttpServer;
 
-import java.io.*;
-import java.net.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Random;
-import java.util.Map;
 import java.util.LinkedHashMap;
-import java.nio.charset.Charset;
+import java.util.Map;
+import java.util.Random;
+import org.json.simple.*;
+import org.json.simple.parser.JSONParser;
 
 class WebServer {
   public static void main(String args[]) {
@@ -243,25 +258,30 @@ class WebServer {
           try {
             query_pairs = splitQuery(request.replace("github?", ""));
             String json = fetchURL("https://api.github.com/" + query_pairs.get("query"));
-            System.out.println(json);
 
-            builder.append("Check the todos mentioned in the Java source file");
-            // TODO: Parse the JSON returned by your fetch and create an appropriate
-            // response
-            // and list the owner name, owner id and name of the public repo on your webpage, e.g.
-            // amehlhase, 46384989 -> memoranda
-            // amehlhase, 46384989 -> ser316examples
-            // amehlhase, 46384989 -> test316
-          } catch (StringIndexOutOfBoundsException strgFormat) { //error thrown by incorrect queries containing 'github?'
+            JSONParser jParser = new JSONParser();
+            JSONArray responce = (JSONArray) jParser.parse(json);
+
+            builder.append("HTTP/1.1 200 OK\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+
+            buildDataTable(builder, responce);
+
+          } catch (StringIndexOutOfBoundsException strgFormat) { //error thrown by incorrect queries containing 'github?' and bad queries
 
             builder.append("HTTP/1.1 400 Bad Request\n");
             builder.append("Content-Type: text/html; charset=utf-8\n");
             builder.append("\n");
             builder.append("The request made is malformed. Reformat and try again");
 
-          } catch (Exception e) {
-            builder.append(e.getMessage()); // Unknown for debug
-          }
+          } catch (org.json.simple.parser.ParseException pEx) {
+
+            builder.append("HTTP/1.1 500 Internal Server Error\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("The github retured values are unexpected. Reload and try again.");
+          } 
 
         } else {
           // if the request is not recognized at all
@@ -386,5 +406,30 @@ class WebServer {
       System.out.println("Exception in url request:" + ex.getMessage());
     }
     return sb.toString();
+  }
+
+
+  /**
+   * A method to create a simple html table given an array of github repos for
+   * some user, as per task 3.6.2.
+   * 
+   * @param builder A string builder to append an html table to.
+   * @param data The Json array of repos for some user
+   */
+  public void buildDataTable(StringBuilder builder, JSONArray data) {
+    builder.append("<h2>Repositories Table</h2>");
+    builder.append("<table style=\"width:70%;border:1px solid\"><tr><th>Repo Name</th><th>Repo ID</th><th>Owner Name</th><th>Owner ID</th></tr>\n");
+
+    for (Object repo : data) {
+      JSONObject rep = (JSONObject) repo;
+
+      builder.append("<tr><th>" + rep.get("name") + "</th>");
+      builder.append("<th>" + rep.get("id") + "</th>");
+      JSONObject owner = (JSONObject) rep.get("owner");
+      builder.append("<th>" + owner.get("login") + "</th>");
+      builder.append("<th>" + owner.get("id") + "</th></tr>\n");
+    }
+
+    builder.append("</table>");
   }
 }
