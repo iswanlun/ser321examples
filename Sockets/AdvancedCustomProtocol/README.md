@@ -33,17 +33,17 @@ Client only sends what they want, could consider adding more information like a 
 	"selected": <int: 1=joke, 2=quote, 3=image, 4=random>
 }
 ```
-   
+     
 Server sends the data type of "data" and if it is a joke, quote or image and also of course the data response: 
-   
+     
 ```
 {
-   "datatype": <int: 1-string, 2-byte array>, 
-   "type": <"joke", "quote", "image">,
-   "data": <thing to return> 
+     "datatype": <int: 1-string, 2-byte array>, 
+     "type": <"joke", "quote", "image">,
+     "data": <thing to return> 
 }
 ```
-   
+     
 Server sends error if something goes wrong
 
 ```
@@ -51,8 +51,8 @@ Server sends error if something goes wrong
 	"error": <error string> 
 }
 ```
-   
-   
+     
+     
 ## Issues in the code that were not included on purpose
 The code is basically to show you how you can use a TCP connection to send over different data and interpret it on either side. It focuses on this alone and not on error handling and some nicer features.
 It is suggested that you play with this and try to include some of the below for your own practice. 
@@ -71,10 +71,10 @@ It is suggested that you play with this and try to include some of the below for
 # UDP
 
 The main differences can be seen in NetworkUtils.java. In there the sending and reading of messages happen. For UDP the max buffer length is assumed to be 1024 bytes. So if the package is bigger it is split up into multiple packages. Ever package holds the information about the following data
-     *   totalPackets(4-byte int),  -- number of total packages
-     *   currentPacket#(4-byte int),  -- number of current package
-     *   payloadLength(4-byte int), -- length of the payload for this package
-     *   payload(byte[]) -- payload
+         *     totalPackets(4-byte int),    -- number of total packages
+         *     currentPacket#(4-byte int),    -- number of current package
+         *     payloadLength(4-byte int), -- length of the payload for this package
+         *     payload(byte[]) -- payload
 
 Client and server are very similar to the TCP example just the connection of course is UDP instead of TCP. The UDP version has the same issues as the TCP example and that is again on purpose. 
 
